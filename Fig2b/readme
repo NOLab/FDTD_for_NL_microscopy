@@ -1,0 +1,3 @@
+Lumerical script sed to generate Fig2B.
+
+This script computes the filed distribution close to a water quartz interface, from which the expected 2PEF signal from a homogeneously ditributed fluorophore is calculated.
