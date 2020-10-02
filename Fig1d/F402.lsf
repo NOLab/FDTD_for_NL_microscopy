@@ -1,0 +1,170 @@
+# Focal Field sweep
+# Version 2
+#  NO 2020-09-22
+
+
+
+
+clear;
+deleteall;
+switchtolayout;
+
+fnamebase = "F402_QUARTZ_WATER_DEPTH_7";
+cd(".\F402");
+
+
+    #add quartz to material database
+if (materialexists("QUARTZ"))
+{deletematerial("QUARTZ");}
+mymaterial = addmaterial("Dielectric");
+setmaterial(mymaterial,"name","QUARTZ");
+setmaterial("QUARTZ", "Refractive Index",1.45); 
+    
+if (materialexists("WATER"))
+{deletematerial("WATER");}
+mymaterial = addmaterial("Dielectric");
+setmaterial(mymaterial,"name","WATER");
+setmaterial("WATER", "Refractive Index",1.33); 
+
+
+c0 = 299792458;
+WL = [1.175,1.225]*1e-6;
+N = 41;
+WLV = linspace(WL(1),WL(2),N);
+F = c0/WLV;
+src_na = 1.0;
+src_dist = -7.5e-6;
+d_lens = 10e-3;
+#d_beam = 4e-3;
+d_beam = 8e-3;
+nopw = 600;
+setglobalsource("wavelength start",WL(1));
+setglobalsource("wavelength stop",WL(2));
+setglobalsource("eliminate discontinuities",true);
+setglobalsource("optimize for short pulse",false);
+setglobalmonitor("use linear wavelength spacing",true); 
+setglobalmonitor("use source limits",true);
+setglobalmonitor("frequency points",N);
+
+addfdtd;
+FDTDX = [-12,12]*1e-6;
+FDTDY = [-12,12]*1e-6;
+FDTDZ = [-7.5,4]*1e-6;
+set("x min",FDTDX(1));
+set("x max",FDTDX(2));
+set("y min",FDTDY(1));
+set("y max",FDTDY(2));
+set("z min",FDTDZ(1));
+set("z max",FDTDZ(2));
+set("mesh accuracy",3);
+set("dt stability factor",1);
+
+set("simulation time",300e-15);
+#set("background index",1.33);
+
+addgaussian;
+SRCX = FDTDX;
+SRCY = FDTDY;
+SRCZ = FDTDZ(1);
+set("override global source settings",false);
+set("injection axis","z");
+set("direction","forward");
+set("x min",SRCX(1));
+set("x max",SRCX(2));
+set("y min",SRCY(1));
+set("y max",SRCY(2));
+set("z",SRCZ(1));
+set("use scalar approximation",false);
+set("use thin lens",true);
+set("NA",src_na);
+set("distance from focus",src_dist);
+set("fill lens",false);
+set("lens diameter",d_lens);
+set("beam diameter",d_beam);
+set("number of plane waves",nopw);
+set("polarization angle",00);
+
+save(fnamebase);
+
+scan_range = 5e-6;
+scan_step = 2.5e-7;
+param = -scan_range:scan_step:scan_range;
+
+
+for (x = 1:length(param)) {
+   strr=1+(scan_range/scan_step)+(1/scan_step)*param(x);
+    load(fnamebase);
+    switchtolayout;
+    if (strr<10) {
+    fnameout = fnamebase + "_position_0" + num2str(strr);
+    }
+    else
+    {
+    fnameout = fnamebase + "_position_" + num2str(strr);
+    }
+    save(fnameout);
+
+setmaterial("WATER","color",[0,0,1,0]);
+setmaterial("QUARTZ","color",[1,0,0,0]);
+
+addrect;
+set("name","QUARTZ");
+set("material","QUARTZ");
+set("x min",FDTDX(1));
+set("x max",param(x));
+set("y min",FDTDY(1));
+set("y max",FDTDY(2));
+set("z min",FDTDZ(1)+0.5e-6);
+set("z max",FDTDZ(2));
+set("override mesh order from material database",1);
+set("mesh order",1); 
+
+addrect;
+set("name","WATER");
+set("material","WATER");
+set("x min",FDTDX(1));
+set("x max",FDTDX(2));
+set("y min",FDTDY(1));
+set("y max",FDTDY(2));
+set("z min",FDTDZ(1));
+set("z max",FDTDZ(1)+0.5e-6);
+set("override mesh order from material database",1);
+set("mesh order",5); 
+
+
+addrect;
+set("name","WATER");
+set("material","WATER");
+set("x min",param(x));
+set("x max",FDTDX(2));
+set("y min",FDTDY(1));
+set("y max",FDTDY(2));
+set("z min",FDTDZ(1));
+set("z max",FDTDZ(2));
+set("override mesh order from material database",1);
+set("mesh order",5); 
+
+addpower;
+set("name","field_profile");
+set("monitor type",8);  # 1 = point, 2 = linear x, 3 = linear y, 4 = linear z, 5 = 2D x-normal, 6 = 2D y-normal, 7 = 2D z-normal, 8 = 3D
+set("x",0);
+set("x span",5e-6);
+set("y",0);
+set("y span",5e-6);
+set("z",0);
+set("z span",8e-6);
+set("down sample x",1);
+set("down sample y",1);
+set("down sample z",1);  
+set("Output Hx",0);
+set("Output Hy",0);
+set("Output Hz",0);
+set("output power",0);
+
+ save(fnameout);
+
+    #run;
+
+
+    
+}
