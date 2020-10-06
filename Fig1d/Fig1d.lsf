@@ -9,8 +9,8 @@ clear;
 deleteall;
 switchtolayout;
 
-fnamebase = "F402_QUARTZ_WATER_DEPTH_7";
-cd(".\F402");
+fnamebase = "Fig1d_QUARTZ_WATER_DEPTH_7";
+cd(".\Fig1d");
 
 
     #add quartz to material database
@@ -161,10 +161,34 @@ set("Output Hy",0);
 set("Output Hz",0);
 set("output power",0);
 
- save(fnameout);
+run;
 
-    #run;
+mname="field_profile";       # monitor name
+E=getresult(mname,"E");     # E fields at moni
+A=E.Ex;
+B=abs(A*A);
+Ex=sum(B,4);
+A=E.Ey;
+B=abs(A*A);
+Ey=sum(B,4);
+A=E.Ez;
+B=abs(A*A);
+Ez=sum(B,4);
+A=E.E2;
+E2=sum(A,4);
+# save dataset to mat file
+X=E.x;
+Y=E.y;
+Z=E.z;
+fnamematlab = replace(fnameout,length(fnameout)-3,-1,"_data");
+#filename=fnameout;
+matlabsave(fnamematlab, Ex,Ey,Ez,E2,X,Y,Z);
+            
+switchtolayout;
+save(fnameout);
 
+
+    
 
     
 }
