@@ -2,8 +2,12 @@ clear;
 switchtolayout;
 deleteall;
 
-fnamebase = "SA06_Sphere_polar90";
-cd("./SA06");
+#Edit material database
+importmaterialdb('material_database.mdf');
+
+fnamebase = "Fig3b_Sphere_polar90";
+#system('mkdir Fig3b_polar90'); #can be automated or done manualy
+cd("./Fig3b_polar90");
 
 
 c0 = 299792458;
@@ -68,8 +72,7 @@ save(fnamebase);
 scan_min=4.5e-6;
 scan_range = 6.5e-6;
 scan_step = 1e-7;
-restart=-9e-7;
-#param = restart:scan_step:scan_range;
+
 param = scan_min:scan_step:scan_range;
 
 # positions of point time monitors
@@ -149,7 +152,7 @@ set("mesh order",8);
 
 addsphere;
 set("name","LIPID_NL");
-set("material","GLYCEROL_NL");
+set("material","LD_NL");
 set('x',param(x));
 set('y',0);
 set('z',0);

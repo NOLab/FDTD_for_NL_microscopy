@@ -2,38 +2,14 @@ clear;
 switchtolayout;
 deleteall;
 
+
+#Edit material database
+importmaterialdb('material_database.mdf');
+
+
 fnamebase = "Fig3b_Sphere_polar00";
+#system('mkdir Fig3b_polar00'); #can be automated or done manualy
 cd("./Fig3b_polar00");
-
-
-#WATER and WATER_NL
-if (materialexists("WATER"))
-{deletematerial("WATER");}
-mymaterial = addmaterial("Dielectric");
-setmaterial(mymaterial,"name","WATER");
-setmaterial("WATER", "Refractive Index",1.33);
-
-if (materialexists("WATER_NL"))
-{deletematerial("WATER_NL");}
-mymaterial = addmaterial("Chi3/Chi2");
-setmaterial(mymaterial,"name","WATER_NL");
-setmaterial("WATER_NL",'χ 1',1.5264);   #sqrt(1.33+1)
-setmaterial("WATER_NL","χ 3",1.68e-5);
-
-#LD and LD_NL
-if (materialexists("LD"))
-{deletematerial("LD");}
-mymaterial = addmaterial("Dielectric");
-setmaterial(mymaterial,"name","LD");
-setmaterial("LD", "Refractive Index",1.47);
-
-if (materialexists("LD_NL"))
-{deletematerial("LD_NL");}
-mymaterial = addmaterial("Chi3/Chi2");
-setmaterial(mymaterial,"name","LD_NL");
-setmaterial("LD_NL",''χ 1',1.5716);     #sqrt(1.47+1)??
-setmaterial("LD_NL","'χ 3",2.7e-5);
-
 
 
 c0 = 299792458;
@@ -97,7 +73,7 @@ set("polarization angle",00);
 save(fnamebase);
 scan_min = 4.5e-6;
 scan_range = 6.5e-6;
-scan_step = 5e-7;
+scan_step = 1e-7;
 
 param = scan_min:scan_step:scan_range;
 
@@ -178,7 +154,7 @@ set("mesh order",8);
 
 addsphere;
 set("name","LIPID_NL");
-set("material","GLYCEROL_NL");
+set("material","LD_NL");
 set('x',param(x));
 set('y',0);
 set('z',0);

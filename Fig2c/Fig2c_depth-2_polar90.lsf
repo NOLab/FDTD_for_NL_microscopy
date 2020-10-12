@@ -7,39 +7,11 @@ clear;
 switchtolayout;
 deleteall;
 
+#Edit material database
+importmaterialdb('material_database.mdf');
+
 fnamebase = "Fig2c_Water_Quartz_Depth-2_polar90";
 cd("Fig2cDepth-2");
-
-#Edit material database
-
-#WATER and WATER_NL
-if (materialexists("WATER"))
-{deletematerial("WATER");}
-mymaterial = addmaterial("Dielectric");
-setmaterial(mymaterial,"name","WATER");
-setmaterial("WATER", "Refractive Index",1.33);
-
-if (materialexists("WATER_NL"))
-{deletematerial("WATER_NL");}
-mymaterial = addmaterial("Chi3/Chi2");
-setmaterial(mymaterial,"name","WATER_NL");
-setmaterial("WATER_NL",'χ 1',1.5264);   #sqrt(1.33+1)
-setmaterial("WATER_NL",'χ 3',1.68e-5);
-
-#QUARTZ and QUARTZ_NL
-if (materialexists("QUARTZ"))
-{deletematerial("QUARTZ");}
-mymaterial = addmaterial("Dielectric");
-setmaterial(mymaterial,"name","QUARTZ");
-setmaterial("QUARTZ", "Refractive Index",1.45);
-
-if (materialexists("QUARTZ_NL"))
-{deletematerial("QUARTZ_NL");}
-mymaterial = addmaterial("Chi3/Chi2");
-setmaterial(mymaterial,"name","QUARTZ_NL");
-setmaterial("QUARTZ_NL",'χ 1',1.5264);   #sqrt(1.45+1)
-setmaterial("QUARTZ_NL",'χ 3',2e-5);
-
 
 c0 = 299792458;
 WL = [1.175,1.225]*1e-6;
