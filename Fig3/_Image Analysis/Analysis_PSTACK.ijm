@@ -9,7 +9,7 @@ function process(format) {
   title = "Untitled";
   width=512; height=512;
   Dialog.create("Test");
-  Dialog.addString("Directory:", "C:/Users/nicolas/Desktop/");
+  Dialog.addString("Directory:", "C:/");
   Dialog.addCheckbox("Save STD-THG", false);
   Dialog.addCheckbox("Save mean-THG", true);
   Dialog.addCheckbox("R2 Filtering", true);
@@ -18,12 +18,12 @@ function process(format) {
     Dialog.addCheckbox("Median Filtering raw data", false);  
 Dialog.addCheckbox("Gaussian Filtering raw data", false);    
   Dialog.addMessage("Polarization Options \n") ;
-Dialog.addNumber("Number of Polar points", 10);
+Dialog.addNumber("Number of Polar points", 19);
 Dialog.addNumber("Polarization offset", 0);
-Dialog.addNumber("Polarization spacing (deg)",20);
+Dialog.addNumber("Polarization spacing (deg)",10);
   Dialog.addMessage("Post-processing") ;
-  Dialog.addNumber("R-squared Threshold (AU)",400);
-Dialog.addChoice("Thresholding Algo:", newArray("Huang dark", "Otsu dark", "Yen dark", "Li dark"));
+  Dialog.addNumber("R-squared Threshold (AU)",900);
+Dialog.addChoice("Thresholding Algo:", newArray("Otsu dark", "Huang dark", "Yen dark", "Li dark"));
 
  Dialog.show();
   directory = Dialog.getString();
@@ -76,8 +76,8 @@ numstack=nSlices();
 
 if(numstack>3){
 	//add option at some point
-setOption("ScaleConversions", true);
-run("StackReg ", "transformation=[Rigid Body]");
+//setOption("ScaleConversions", true);
+//run("StackReg ", "transformation=[Rigid Body]");
 
 if(domean==true)
 {
