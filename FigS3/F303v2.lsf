@@ -1,0 +1,215 @@
+# 2PEF imaging
+# Version 2
+# NO 2020-07-19
+
+#n_water =1.33
+#n_quartz=1.45
+
+
+clear;
+deleteall;
+switchtolayout;
+
+fnamebase = "303_QUARTZ_WATER_CIRC";
+cd(".\F303v2");
+
+#add quartz to material database
+if (materialexists("QUARTZ"))
+{deletematerial("QUARTZ");}
+mymaterial = addmaterial("Dielectric");
+setmaterial(mymaterial,"name","QUARTZ");
+setmaterial("QUARTZ", "Refractive Index",1.45);
+
+
+c0 = 299792458;
+WL = [1.175,1.225]*1e-6;
+N = 41;
+WLV = linspace(WL(1),WL(2),N);
+F = c0/WLV;
+src_na = 1.0;
+src_dist = -12.5e-6;
+d_lens = 10e-3;
+#d_beam = 4e-3;
+d_beam = 8e-3;
+nopw = 600;
+setglobalsource("wavelength start",WL(1));
+setglobalsource("wavelength stop",WL(2));
+setglobalsource("eliminate discontinuities",true);
+setglobalsource("optimize for short pulse",false);
+setglobalmonitor("use linear wavelength spacing",true);
+setglobalmonitor("use source limits",true);
+setglobalmonitor("frequency points",N);
+
+addfdtd;
+FDTDX = [-18,18]*1e-6;
+FDTDY = [-18,18]*1e-6;
+FDTDZ = [-12.5,5]*1e-6;
+set("x min",FDTDX(1));
+set("x max",FDTDX(2));
+set("y min",FDTDY(1));
+set("y max",FDTDY(2));
+set("z min",FDTDZ(1));
+set("z max",FDTDZ(2));
+set("mesh accuracy",3); #1 for testing
+set("dt stability factor",1);
+
+set("simulation time",350e-15);
+set("background index",1.33);
+
+addgaussian;
+SRCX = FDTDX;
+SRCY = FDTDY;
+SRCZ = FDTDZ(1);
+set("override global source settings",false);
+set("injection axis","z");
+set("direction","forward");
+set("x min",SRCX(1));
+set("x max",SRCX(2));
+set("y min",SRCY(1));
+set("y max",SRCY(2));
+set("z",SRCZ(1));
+set("use scalar approximation",false);
+set("use thin lens",true);
+set("NA",src_na);
+set("distance from focus",src_dist);
+set("fill lens",false);
+set("lens diameter",d_lens);
+set("beam diameter",d_beam);
+set("number of plane waves",nopw);
+set("polarization angle",00);
+
+addgaussian;
+SRCX = FDTDX;
+SRCY = FDTDY;
+SRCZ = FDTDZ(1);
+set("override global source settings",false);
+set("injection axis","z");
+set("direction","forward");
+set("x min",SRCX(1));
+set("x max",SRCX(2));
+set("y min",SRCY(1));
+set("y max",SRCY(2));
+set("z",SRCZ(1));
+set("use scalar approximation",false);
+set("use thin lens",true);
+set("NA",src_na);
+set("distance from focus",src_dist);
+set("fill lens",false);
+set("lens diameter",d_lens);
+set("beam diameter",d_beam);
+set("number of plane waves",nopw);
+set("polarization angle",90);
+set("phase",90);
+
+
+save(fnamebase);
+
+scan_range_x = 6e-6;
+scan_step_x = 2.5e-7;
+paramx = -scan_range_x:scan_step_x:scan_range_x;
+
+#49position in x - 17 in z -> 833pts ->~3 days
+scan_min_z = -12e-6;
+scan_max_z = 4e-6;
+scan_step_z = -1e-6;
+paramz = scan_max_z:scan_step_z:scan_min_z;
+fluo=ones(length(paramx),length(paramz)) ;
+for (z = 1:length(paramz))
+{
+    for (x = 1:length(paramx))
+    {
+        
+        strrx=round(1+(scan_range_x/scan_step_x)+(1/scan_step_x)*paramx(x));
+        strrz=round(1+12.5-paramz(z)*1e6);
+        load(fnamebase);
+        switchtolayout;
+        fnameout = fnamebase + "_position_" + num2str(strrx) + "_depth_" + num2str(strrz);
+        save(fnameout);
+        
+        setmaterial("QUARTZ","color",[1,0,0,0]);
+        
+        addrect;
+        set("name","QUARTZ");
+        set("material","QUARTZ");
+        set("x min",FDTDX(1));
+        set("x max",paramx(x));
+        set("y min",FDTDY(1));
+        set("y max",FDTDY(2));
+        set("z min",paramz(z));
+        set("z max",FDTDZ(2));
+        
+        
+        #addpower;
+        #set("name","field_profile");
+        #set("monitor type",8);  # 1 = point, 2 = linear x, 3 = linear y, 4 = linear z, 5 = 2D x-normal, 6 = 2D y-normal, 7 = 2D z-normal, 8 = 3D
+        #set("x",0);
+        #set("x span",8e-6);
+        #set("y",0);
+        #set("y span",8e-6);
+        #set("z",0);
+        #set("z span",10e-6);
+        #set("down sample x",1);
+        #set("down sample y",1);
+        #set("down sample z",1);
+        #set("Output Hx",0);
+        #set("Output Hy",0);
+        #set("Output Hz",0);
+        #set("output power",0);
+        
+        addtime;
+        set("name","time_profile");
+        set("monitor type",8);  # 1 = point, 2 = linear x, 3 = linear y, 4 = linear z, 5 = 2D x-normal, 6 = 2D y-normal, 7 = 2D z-normal, 8 = 3D
+        set("spatial interpolation", "nearest mesh cell");
+        set("x",0);
+        set("x span",8e-6);
+        set("y",0);
+        set("y span",8e-6);
+        set("z",0);
+        set("z span",10e-6);
+        set("down sample x",1);
+        set("down sample y",1);
+        set("down sample z",1);
+        set("Output Hx",0);
+        set("Output Hy",0);
+        set("Output Hz",0);
+        set("output power",0);
+        set("min sampling per cycle",1);
+        
+        addindex;
+        set("name","index_monitor");
+        set("monitor type",4);  # 2: 2D y-normal 4: 3D
+        set("spatial interpolation", "nearest mesh cell");
+        set("x",0);
+        set("x span",8e-6);
+        set("y",0);
+        set("y span",8e-6);
+        set("z",0);
+        set("z span",10e-6);
+        
+        
+        run;
+        
+        mname="time_profile";       # monitor name
+        E=getresult(mname,"E");     # E fields at moni
+        Ax=E.Ex;
+        Ay=E.Ey;
+        Az=E.Ez;
+        Itmp=abs(Ax^2);  #Ix(x,y,z,t)
+        Itmp2=abs(Ay^2);  #Iy(x,y,z,t)
+        Itmp3=abs(Az^2); #Iz(x,y,z,t)
+        I2=Itmp+Itmp2+Itmp3; #(intensity as a function of position and time)
+        I2=sum(I2*I2,4); #intensity squared as a function of position
+        # save dataset to mat file
+        
+        I=getresult("index_monitor","index_x");
+        Ifluo=pinch((I==1.33));
+        tmp=sum(Ifluo*I2);
+        fluo(x,z)= tmp;
+        filename=fnameout;
+        matlabsave(filename,Ifluo,I2,tmp);
+        
+        switchtolayout;
+        save(fnameout);
+        
+    }
+}
