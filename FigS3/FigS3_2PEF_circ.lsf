@@ -10,8 +10,8 @@ clear;
 deleteall;
 switchtolayout;
 
-fnamebase = "303_QUARTZ_WATER_CIRC";
-cd(".\F303v2");
+fnamebase = "FigS3_QUARTZ_WATER_CIRC";
+
 
 #add quartz to material database
 if (materialexists("QUARTZ"))
@@ -108,7 +108,7 @@ scan_range_x = 6e-6;
 scan_step_x = 2.5e-7;
 paramx = -scan_range_x:scan_step_x:scan_range_x;
 
-#49position in x - 17 in z -> 833pts ->~3 days
+#49position in x - 17 in z -> 833pts 
 scan_min_z = -12e-6;
 scan_max_z = 4e-6;
 scan_step_z = -1e-6;
