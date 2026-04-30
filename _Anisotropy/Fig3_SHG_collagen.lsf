@@ -1,0 +1,205 @@
+clear;
+switchtolayout;
+deleteall;
+
+#Edit material database
+#importmaterialdb('material_database.mdf');
+
+
+fnamebase = "Cylinder";
+cd("./Fig1_SHG");
+
+
+c0 = 299792458;
+WL = [1.175,1.225]*1e-6;
+N = 41;
+WLV = linspace(WL(1),WL(2),N);
+F = c0/WLV; 
+src_amp = 1e+6;       ########## Source Amplitude
+src_na = 0.95;
+src_dist = -6.5e-6;
+d_lens = 10e-3;
+
+d_beam = 8e-3;
+nopw = 1000;
+setglobalsource("wavelength start",WL(1));
+setglobalsource("wavelength stop",WL(2));
+setglobalsource("eliminate discontinuities",true);
+setglobalsource("optimize for short pulse",false);
+setglobalmonitor("use linear wavelength spacing",true);
+setglobalmonitor("use source limits",true);
+setglobalmonitor("frequency points",N);
+
+addfdtd;
+FDTDX = [-9,9]*1e-6;
+FDTDY = [-9,9]*1e-6;
+FDTDZ = [-10,10]*1e-6; ########## Possible Values
+set("index",1.33);       ########## Water as Background Material
+
+set("x min",FDTDX(1));
+set("x max",FDTDX(2));
+set("y min",FDTDY(1));
+set("y max",FDTDY(2));
+set("z min",FDTDZ(1));
+set("z max",FDTDZ(2));
+
+set("mesh accuracy",5);
+set("dt stability factor",0.5);
+set("simulation time",300e-15);
+set("auto shutoff min",1e-8);
+set("bfast alpha",1.33); 
+
+##############################
+addmesh;
+set("x min",FDTDX(1)*1.2);
+set("x max",FDTDX(2)*1.2);
+set("y min",FDTDY(1)*1.2);
+set("y max",FDTDY(2)*1.2);
+set("z min",-6.5e-6);
+set("z max",6.5e-6);
+set("override x mesh", 1);
+set("override y mesh", 1);
+set("override z mesh", 1);
+set("set maximum mesh step", 1);
+set("dx", 40e-9);
+set("dy", 40e-9);
+set("dz", 40e-9);
+##############################
+
+
+param_polar = 0:9:90;
+
+
+save(fnamebase);
+
+
+# positions of point time monitors
+
+X = linspace(-7.5e-6,7.5e-6,31); ##### Changed from 31 to 5
+Y = linspace(-7.5e-6,7.5e-6,31); ##### Changed from 31 to 5
+Z = 6.4e-6;
+
+for (x = 1:length(param_polar)) {
+   strr=param_polar(x);
+    load(fnamebase);
+    switchtolayout;
+    if (strr<10) {
+    fnameout = fnamebase + "_polar_" + num2str(strr);
+    }
+    else
+    {
+    fnameout = fnamebase + "_polar_" + num2str(strr);
+    }
+    save(fnameout);
+
+addgaussian;
+SRCX = FDTDX;
+SRCY = FDTDY;
+SRCZ = FDTDZ(1);
+set("override global source settings",false);
+set("injection axis","z");
+set("direction","forward");
+set("x min",SRCX(1));
+set("x max",SRCX(2));
+set("y min",SRCY(1));
+set("y max",SRCY(2));
+set("z",SRCZ(1));
+set("amplitude",src_amp);           ##########
+set("use scalar approximation",false);
+set("use thin lens",true);
+set("NA",src_na);
+set("distance from focus",src_dist);
+set("fill lens",false);
+set("lens diameter",d_lens);
+set("beam diameter",d_beam);
+set("number of plane waves",nopw);
+set("polarization angle",param_polar(x));
+
+
+#set different colors for the different materials
+
+setmaterial("Collagen_Fiber","color",[1,1,1,0]);  
+
+##############################
+addrect;
+set("name","Collagen_Fiber");     
+set("material","Collagen_Fiber");
+set("x min",1.5*SRCX(1));
+set("x max",1.5*SRCX(2));
+set("y min",1.5*SRCY(1));
+set("y max",1.5*SRCY(2));
+set("z min",-1e-6); 
+set("z max",1e-6); 
+set("override mesh order from material database",1);
+set("mesh order",8);
+##############################
+
+    # add point time monitors
+
+    tmonames = cell(length(X)*length(Y)*length(Z));
+    ll = 0;
+    for (xx = 1:length(X)) {
+        for (yy = 1:length(Y)) {
+            for (zz = 1:length(Z)) {
+                ll = ll + 1;
+                addtime;
+                select("monitor");
+                moname = "t monitor x = " + num2str(X(xx)*1e6)
+                + " um"
+                + " y = " + num2str(Y(yy)*1e6)
+                + " um"
+                + " z = " + num2str(Z(zz)*1e6)
+                + " um";
+                tmonames{ll} = moname;
+                set("name",moname);
+                select(moname);
+                set("x",X(xx));
+                set("y",Y(yy));
+                set("z",Z(zz));
+                set("output Hx",0);
+                set("output Hy",0);
+                set("output Hz",0);
+            }
+        }
+    }
+
+ #pause(10);
+    run;
+
+
+    # read point time monitors
+
+    tspectra = cell(length(X)*length(Y)*length(Z));
+    tmonitor = struct;
+    ll = 0;
+    for (xx = 1:length(X)) {
+        for (yy = 1:length(Y)) {
+            for (zz = 1:length(Z)) {
+                ll = ll + 1;
+                moname = "t monitor x = " + num2str(X(xx)*1e6)
+                                + " um"
+                                + " y = " + num2str(Y(yy)*1e6)
+                                + " um"
+                                + " z = " + num2str(Z(zz)*1e6)
+                                + " um";
+                tmonitor.monitor_name = moname;
+                tmonitor.x = X(xx);
+                tmonitor.y = Y(yy);
+                tmonitor.z = Z(zz);
+                tmonitor.spectrum = getresult(moname,
+                                                  "spectrum");
+                tspectra{ll} = tmonitor;}}}
+
+    # read simulation parameters
+
+    select("source");
+    source_center_wavelength_m = get("center wavelength");
+    source_pol_angle_deg = get("polarization angle");
+
+    # housekeeping and save
+
+    fnamematlab = fnameout + '_data';
+      matlabsave(fnamematlab);
+       switchtolayout;
+    save(fnameout);
+}
